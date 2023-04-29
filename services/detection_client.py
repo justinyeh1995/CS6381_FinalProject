@@ -15,7 +15,7 @@ class DetectionClient():
         self.host = host
         self.port = port
 
-    def run(self):
+    def run(self, ip_address):
         # Create a gRPC channel + stub.
         channel = grpc.insecure_channel(f'{self.host}:{self.port}')
         stub = detection_pb2_grpc.DetectionServiceStub(channel)
@@ -29,6 +29,8 @@ class DetectionClient():
 
         # Print the response.
         print(response)
+
+        return response
 
 def run_client():
     client = DetectionClient('localhost', 50051)
