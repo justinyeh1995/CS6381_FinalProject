@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package services;
+
+message Request {
+  string ip_address = 1;
+}
+
+message Response {
+  bool status = 1;
+}
+
+service DetectionService {
+  // A simple RPC.
+  //
+  // Obtains the status of the given IP address.
+  //
+  // Returns the status of the IP address. If the IP address is not in the
+  // database, returns false.
+  rpc CheckStatus(Request) returns (Response) {}
+}
