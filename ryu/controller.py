@@ -13,12 +13,18 @@ from ryu.lib.packet import icmp
 from ryu.lib.packet import tcp
 from ryu.lib.packet import udp
 
+import sys
+sys.path.insert(0,"..") # import the module from parent directory
+
+from services import detection_client
+
 class CustomController(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(CustomController, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
+        self.detection_client = detection_client.DetectionClient('localhost', 50051)
     
     # From simple_switch_13
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -76,7 +82,7 @@ class CustomController(app_manager.RyuApp):
 
     # Event: Handle packet sent from switch to the controller
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
+    def packet_in_handler(self, ev):
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -101,6 +107,28 @@ class CustomController(app_manager.RyuApp):
         self.mac_to_port.setdefault(dpid, {})
 
         self.logger.info("packet in %s %s %s %s", dpid, dl_src, dl_dst, in_port)
+
+        # Extract the IP header from the packet
+        ip_header = pkt.get_protocol(ipv4.ipv4)
+
+        if ip_header is not None:
+            src_ip = ip_header.src
+            dst_ip = ip_header.dst
+            print("Packet from %s to %s" % (src_ip, dst_ip))
+        
+            # Send this scp_ip to detection module
+            # TO-DO
+            res = self.detection_client.run(src_ip)
+            print(res)
+            if res.status == 1:
+                print("Attack detected!")
+                # TO-DO: Block the source IP
+                # self.send_packet_out(msg, []) # Drop the packet??
+                # quarantine(src_ip) 
+
+
+
+        
 
         # # check IP Protocol and create a match for IP
         # if eth.ethertype == ether_types.ETH_TYPE_IP:
