@@ -13,10 +13,10 @@ from ryu.lib.packet import icmp
 from ryu.lib.packet import tcp
 from ryu.lib.packet import udp
 
-import sys
-sys.path.insert(0,"..") # import the module from parent directory
+#import sys
+#sys.path.insert(0,"..") # import the module from parent directory
 
-from services import detection_client
+import detection_client
 
 class CustomController(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
