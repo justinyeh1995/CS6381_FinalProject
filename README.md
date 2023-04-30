@@ -9,19 +9,15 @@ sudo apt-get install openvswitch-switch-dpdk
 
 ### Setup switches
 ```sh=
-ovs-ofctl add-br <bridge-name>
+ovs-vsctl add-br <bridge-name>
 ```
 
 ```sh=
-sudo ovs-ofctl add-flow <bridge-name> "priority=0, actions=controller"
+sudo ovs-vsctl add-port <bridge> ens3
 ```
 
 ```sh=
-sudo ovs-vsctl add-port <bridge> <port>
-```
-
-```sh=
-ovs-ofctl set-controller <bridge-name> "priority=0, actions=controller"
+sudo ovs-vsctl add-flow <bridge-name> "priority=0, actions=controller"
 ```
 
 ### Connect to ryu applications
