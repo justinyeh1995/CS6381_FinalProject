@@ -24,7 +24,7 @@ sudo ovs-vsctl add-port <bridge> <port>
 ovs-ofctl set-controller <bridge-name> "priority=0, actions=controller"
 ```
 
-### connect to ryu applications
+### Connect to ryu applications
 ```sh=
 sudo ovs-vsctl set-controller <bridge-name> tcp:129.114.25.220:6653
 ```
