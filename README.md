@@ -1,6 +1,12 @@
 # CS6381 FinalProject
 
 ## On Exposed Host Machines
+
+### Installation
+```sh=
+sudo apt-get install openvswitch-switch-dpdk
+```
+
 ### Setup switches
 ```sh=
 ovs-ofctl add-br <bridge-name>
