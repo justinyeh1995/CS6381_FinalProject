@@ -11,9 +11,9 @@ sudo apt-get install openvswitch-switch-dpdk
 ```sh=
 sudo ovs-vsctl add-br <bridge-name>
 ```
-DO NOT USE THIS COMMAND!!!
 ```sh=
-sudo ovs-vsctl add-port <bridge> ens3
+sudo ip addr add <ens3-ip>/24 dev <bridge-name>
+sudo ip link set <bridge-name> up
 ```
 
 ```sh=
