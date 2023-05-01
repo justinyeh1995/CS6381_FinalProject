@@ -26,8 +26,13 @@ sudo ovs-vsctl set-controller <bridge-name> tcp:192.168.2.209:6653
 ```
 
 ---
+## Services
 
-## Ryu Application
+### Start Detection Server
+```sh=
+python3 detection_server.py
+```
+### Ryu Application
 ```
 cd services
 ryu-manager controller.py --ofp-tcp-listen-port=6653
