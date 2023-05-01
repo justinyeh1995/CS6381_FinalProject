@@ -9,7 +9,7 @@ sudo apt-get install openvswitch-switch-dpdk
 
 ### Setup switches
 ```sh=
-ovs-vsctl add-br <bridge-name>
+sudo ovs-vsctl add-br <bridge-name>
 ```
 DO NOT USE THIS COMMAND!!!
 ```sh=
