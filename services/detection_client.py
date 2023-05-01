@@ -15,26 +15,25 @@ class DetectionClient():
         self.host = host
         self.port = port
 
-    def run(self, ip_address):
+    def run(self, ip_address=None):
         # Create a gRPC channel + stub.
         channel = grpc.insecure_channel(f'{self.host}:{self.port}')
         stub = detection_pb2_grpc.DetectionServiceStub(channel)
 
         # Create a request for the server.
         # the request should contain the ip address of the client
-        request = detection_pb2.Request(ip_address='129.114.26.225')
+        request = detection_pb2.Request(ip_address=ip_address)
 
         # Make the request synchronously.
         response = stub.CheckStatus(request)
 
-        # Print the response.
-        print(response)
-
-        return response
+        return response.status
 
 def run_client():
     client = DetectionClient('localhost', 50051)
-    client.run()    
+    res = client.run('129.114.26.225')    
+    print(res)
 
+    
 if __name__ == '__main__':
     run_client()

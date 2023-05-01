@@ -43,6 +43,7 @@ class CustomController(app_manager.RyuApp):
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
+        print ("Switch %s connected" % datapath.id)
         self.add_flow(datapath, 0, match, actions)
 
     # add a new flow(rule) to switch.
@@ -83,6 +84,7 @@ class CustomController(app_manager.RyuApp):
     # Event: Handle packet sent from switch to the controller
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
+        print("Packet in event")
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -94,9 +96,13 @@ class CustomController(app_manager.RyuApp):
         parser = datapath.ofproto_parser
         in_port = msg.match['in_port']
 
+        # check if packet is an ICMP packet
+        #if msg.match['ip_proto'] == ofproto_v1_3.IPPROTO_ICMP:
+        #    # handle the ping request here
+        #    print("Ping request detected at host node")
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
-
+        print(pkt)
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
             return
@@ -110,34 +116,32 @@ class CustomController(app_manager.RyuApp):
 
         # Extract the IP header from the packet
         ip_header = pkt.get_protocol(ipv4.ipv4)
-
+        print(ip_header)
         if ip_header is not None:
             src_ip = ip_header.src
             dst_ip = ip_header.dst
             print("Packet from %s to %s" % (src_ip, dst_ip))
-        
+
+        # # check IP Protocol and create a match for IP
+        if eth.ethertype == ether_types.ETH_TYPE_IP:
+            ip = pkt.get_protocol(ipv4.ipv4)
+            ip_src = ip.src
+            ip_dst = ip.dst
+
+            self.logger.info("packet in %s %s %s %s", dpid, in_port, 
+                ip_src, ip_dst)
+
             # Send this scp_ip to detection module
             # TO-DO
-            res = self.detection_client.run(src_ip)
+            res = self.detection_client.run(ip_src)
             print(res)
-            if res.status == 1:
+            if res:
                 print("Attack detected!")
                 # TO-DO: Block the source IP
                 # self.send_packet_out(msg, []) # Drop the packet??
                 # quarantine(src_ip) 
-
-
-
-        
-
-        # # check IP Protocol and create a match for IP
-        # if eth.ethertype == ether_types.ETH_TYPE_IP:
-        #     ip = pkt.get_protocol(ipv4.ipv4)
-        #     ip_src = ip.src
-        #     ip_dst = ip.dst
-
-        #     self.logger.info("packet in %s %s %s %s %s %s", dpid, src, dst, in_port, 
-        #         ip_src, ip_dst)
+            else:
+                print("Normal packet")
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][dl_src] = in_port
