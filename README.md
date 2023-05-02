@@ -1,7 +1,17 @@
 # CS6381 FinalProject
 
-## On Exposed Host Machines
+## On Master Node 1 (Main)
 
+
+
+## On Exposed Host Machines
+if you have zookeeper on your host machines
+```sh=
+bin/zkCli.sh -timeout 3000 -server remoteIP:2181
+```
+---
+
+THIS SECTION IS DEPRECATED!!!
 ### Installation
 ```sh=
 sudo apt-get install openvswitch-switch-dpdk
