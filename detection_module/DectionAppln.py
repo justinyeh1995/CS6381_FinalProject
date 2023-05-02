@@ -41,9 +41,11 @@ class DetectionAppln ():
                     print ("Data Watcher: " + data.decode("utf-8"))
                     print ("Stat Watcher: " + str(stat))
                     # Parse the data to get the source IP
-                    flag, ip = self.parse_data(data)
-                    if self.detect(ip):
-                        self.set_quarantine_signal(node, ip)
+                    flag, ips = self.parse_data(data)
+                    # Call the detection service
+                    for ip in ips:
+                        if self.detect(ip):
+                            self.set_quarantine_signal(node, ip)
                 except Exception as e:
                     traceback.print_exc()
                     raise e
@@ -53,9 +55,9 @@ class DetectionAppln ():
         ips = json.loads(history)
         return flag, ips
 
-    def detect (self, ip):
+    def detect (self, ip): 
         # Call the detection service
-        response = self.detection_client.detect(ip)
+        response = self.detection_client.run(ip)
         return response
     
     def set_quarantine_signal (self, node, ip):
@@ -85,7 +87,7 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     logger = logging.getLogger (__name__)
-    detection_appln = MitigationAppln(logger)
+    detection_appln = DetectionAppln(logger)
     detection_appln.configure()
     detection_appln.detection_watch()
     detection_appln.event_loop() 
