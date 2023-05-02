@@ -84,9 +84,6 @@ class ZookeeperAPI():
     def shutdown (self):    
         """Shutdown the zookeeper adapter"""
         try:
-            self.logger.debug (("ZookeeperAPI::shutdown -- now remove the znode {}".format (self.path)))
-            self.zk.delete (self.path, recursive=True)
-
             self.logger.debug  ("ZookeeperAPI::shutdown -- disconnect and close")
             self.zk.stop ()
             self.zk.close ()
