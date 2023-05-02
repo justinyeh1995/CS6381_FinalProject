@@ -1,3 +1,4 @@
+DEPRECATED!!!
 ## Install Ryu
 ```sh=
 git clone https://github.com/faucetsdn/ryu.git
