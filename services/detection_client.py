@@ -12,8 +12,8 @@ import traceback
 
 class DetectionClient():
     def __init__(self, host, port):
-        self.host = host
-        self.port = port
+        self.host = host # default host on master node 1 (192.168.2.209)
+        self.port = port # default port on master node 1 (50051)
 
     def run(self, ip_address=None):
         # Create a gRPC channel + stub.
