@@ -15,17 +15,25 @@ from scapy.all import *
 import argparse # for argument parsing
 import configparser # for configuration parsing
 
+import paramiko
+
 class DetectionAppln ():
     def __init__(self, logger):
         self.node = None
         self.zk_api = ZookeeperAPI(logger)
         self.detection_client = DetectionClient('192.168.2.209','50051')
+        self.ssh_client = paramiko.SSHClient()
+        self.sftp = None
 
     def configure (self, args):
         self.zk_api.configure()
         self.zk_api.start ()
         self.zk_api.dump ()
         self.node = args.node
+        # Connect to the remote server
+        self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.ssh_client.connect('192.168.2.209', username='cc', key_filename='/home/cc/.ssh/id_rsa')
+        self.sftp = self.ssh_client.open_sftp()
 
     def init_znode (self, node):
         path = self.zk_api.detection_root_path + "/" + node
@@ -73,10 +81,24 @@ class DetectionAppln ():
         flag, ips = self.parse_data(data)
         # Add the new IP to the list
         ips.append(ip)
+        ips = list(set(ips))
         # Update the znode
         path = self.zk_api.mitigation_root_path + "/" + node
         value = "1" + ":" + json.dumps(ips)
         self.zk_api.zk.set (path, value.encode('utf-8'))
+
+    def write_to_db (self, ip):
+        # Read the data from the file
+        with self.sftp.open('/home/cc/Team10/CS6381_FinalProject/services/blocklist_db.json', 'r') as f:
+            # Parse the JSON data
+            data = json.load(f)
+            latest_id = data[-1]['id']
+            # Modify the parsed data to add a new record
+            new_record = {'id': latest_id+1, 'ip': ip}
+            data.append(new_record)
+        # Write the modified data back to the file
+        with self.sftp.open('/home/cc/Team10/CS6381_FinalProject/services/blocklist_db.json', 'w') as f:
+            json.dump(data, f, indent=4)
     
     def event_loop (self):
         print ("Event loop started")
@@ -86,13 +108,18 @@ class DetectionAppln ():
                 if self.detect(packet[IP].src):
                     print("Attack from C&C server")
                     self.set_quarantine_signal(self.node, packet[IP].src)
+                    # to-do: send the IP of this machine to the db server
+                    self.write_to_db(packet[IP].dst) 
                 else:
                     print("Normal traffic from " + packet[IP].src)
 
         sniff(prn=packet_callback, filter="tcp", iface="ens3")
+        sniff(prn=packet_callback, filter="icmp", iface="ens3")
 
     def __del__ (self):
         self.zk_api.shutdown()
+        self.ssh_client.close()
+
 
 
 def parseCmdLineArgs ():

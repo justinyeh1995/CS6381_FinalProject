@@ -53,12 +53,15 @@ class MitigationAppln ():
         return flag, ips
 
     def quarantine (self, ip):
-        subprocess.call(["sudo", "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"])
+        subprocess.call(["sudo", "iptables", "-I", "INPUT", "-s", ip, "-j", "DROP"])
+        subprocess.call(["sudo", "iptables", "-I", "OUTPUT", "-d", ip, "-j", "DROP"])
         self.qurantined_hosts.add(ip)
         print ("IP Address " + ip + " is blocked")
 
-    def unquarantine (self, ip):
-        subprocess.call(["sudo", "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP"])
+    def unquarantine (self):
+        for ip in self.qurantined_hosts:
+            subprocess.call(["sudo", "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP"])
+            subprocess.call(["sudo", "iptables", "-D", "OUTPUT", "-d", ip, "-j", "DROP"])
     
     def event_loop (self):
         print ("Event loop started")
@@ -67,6 +70,7 @@ class MitigationAppln ():
 
     def __del__ (self):
         self.zk_api.shutdown()
+        self.unquarantine()
 
 
 if __name__ == "__main__":
