@@ -11,15 +11,21 @@ import detection_pb2
 import detection_pb2_grpc
 from detection_client import DetectionClient
 
+from scapy.all import *
+import argparse # for argument parsing
+import configparser # for configuration parsing
+
 class DetectionAppln ():
     def __init__(self, logger):
+        self.node = None
         self.zk_api = ZookeeperAPI(logger)
         self.detection_client = DetectionClient('192.168.2.209','50051')
 
-    def configure (self):
+    def configure (self, args):
         self.zk_api.configure()
         self.zk_api.start ()
         self.zk_api.dump ()
+        self.node = args.node
 
     def init_znode (self, node):
         path = self.zk_api.detection_root_path + "/" + node
@@ -74,22 +80,44 @@ class DetectionAppln ():
     
     def event_loop (self):
         print ("Event loop started")
-        while True:
-            time.sleep(1)
+            
+        def packet_callback(packet):
+            if packet.haslayer(IP):
+                if self.detect(packet[IP].src):
+                    print("Attack from C&C server")
+                    self.set_quarantine_signal(self.node, packet[IP].src)
+                else:
+                    print("Normal traffic from " + packet[IP].src)
+
+        sniff(prn=packet_callback, filter="tcp", iface="ens3")
 
     def __del__ (self):
         self.zk_api.shutdown()
+
+
+def parseCmdLineArgs ():
+    # instantiate a ArgumentParser object
+    parser = argparse.ArgumentParser (description="Publisher Application")
+    
+    # Now specify all the optional arguments we support
+    # At a minimum, you will need a way to specify the IP and port of the lookup
+    # service, the role we are playing, what dissemination approach are we
+    # using, what is our endpoint (i.e., port where we are going to bind at the
+    # ZMQ level)
+    
+    parser.add_argument ("-n", "--node", default="host1", help="Some host name, host1/host2/host3")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
     # set underlying default logging capabilities
     logging.basicConfig (level=logging.DEBUG,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
     logger = logging.getLogger (__name__)
+    args = parseCmdLineArgs ()
     detection_appln = DetectionAppln(logger)
-    detection_appln.configure()
-    detection_appln.detection_watch()
+    detection_appln.configure(args)
+    #detection_appln.detection_watch()
     detection_appln.event_loop() 
 
 
