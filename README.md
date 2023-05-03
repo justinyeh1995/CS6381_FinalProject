@@ -56,8 +56,9 @@ ryu-manager controller.py --ofp-tcp-listen-port=6653
 python3 server.py
 ```
 ### Run encryptor application on infected node
+#### Ensure path to file target paths is correct.
 ```
-```sh=
+```
 python3 encryptor.py
 ```
 ```
