@@ -47,3 +47,19 @@ python3 detection_server.py
 cd services
 ryu-manager controller.py --ofp-tcp-listen-port=6653
 ```
+
+---
+## Ransomware Test
+
+### Start C2 server
+```sh=
+python3 server.py
+```
+### Run encryptor application on infected node
+
+```
+```
+Ensure path to file target paths is correct.
+python3 encryptor.py
+```
+```
