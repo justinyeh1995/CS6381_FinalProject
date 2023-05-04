@@ -7,8 +7,9 @@
 2. Start Detection Server
 
 ## On Exposed Host Machines
-
-sudo python3 -m pip install grpcio protobuf==4.21.12 scapy
+```sh=
+sudo python3 -m pip install grpcio protobuf==4.21.12 scapy paramiko
+```
 
 if you have zookeeper on your host machines
 ```sh=
