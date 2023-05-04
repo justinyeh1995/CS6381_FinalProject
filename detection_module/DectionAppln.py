@@ -22,7 +22,7 @@ class DetectionAppln ():
         self.node = None
         self.zk_api = ZookeeperAPI(logger)
         self.detection_client = DetectionClient('192.168.2.209','50051')
-        self.ssh_client = paramiko.SSHClient()
+        self.ssh_client = None
         self.sftp = None
 
     def configure (self, args):
@@ -30,7 +30,8 @@ class DetectionAppln ():
         self.zk_api.start ()
         self.zk_api.dump ()
         self.node = args.node
-        # Connect to the remote server
+        # Get SSH client
+        self.ssh_client = paramiko.SSHClient()
         self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh_client.connect('192.168.2.209', username='cc', key_filename='/home/cc/.ssh/id_rsa')
         self.sftp = self.ssh_client.open_sftp()
@@ -99,22 +100,29 @@ class DetectionAppln ():
         # Write the modified data back to the file
         with self.sftp.open('/home/cc/Team10/CS6381_FinalProject/services/blocklist_db.json', 'w') as f:
             json.dump(data, f, indent=4)
+
+        self.sftp.close()
+        self.ssh_client.close()
+    
     
     def event_loop (self):
         print ("Event loop started")
-            
+        print ("Waiting for an Attack") 
         def packet_callback(packet):
             if packet.haslayer(IP):
+                # white list master node
+                if packet[IP].src == "192.168.2.209":
+                    return
                 if self.detect(packet[IP].src):
                     print("Attack from C&C server")
+                    print ((packet[IP].src, packet[IP].dst))
                     self.set_quarantine_signal(self.node, packet[IP].src)
                     # to-do: send the IP of this machine to the db server
                     self.write_to_db(packet[IP].dst) 
-                else:
-                    print("Normal traffic from " + packet[IP].src)
+                #else:
+                #    print("Normal traffic from " + packet[IP].src)
 
         sniff(prn=packet_callback, filter="tcp", iface="ens3")
-        sniff(prn=packet_callback, filter="icmp", iface="ens3")
 
     def __del__ (self):
         self.zk_api.shutdown()
