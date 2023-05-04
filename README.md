@@ -2,13 +2,23 @@
 
 ## On Master Node 1 (Main)
 
+1. Start Zookeeper Server
 
+2. Start Detection Server
 
 ## On Exposed Host Machines
+
+sudo python3 -m pip install grpcio protobuf==4.21.12 scapy
+
 if you have zookeeper on your host machines
 ```sh=
 bin/zkCli.sh -timeout 3000 -server remoteIP:2181
 ```
+
+2. Start up the Mitigation Client 
+1. Start up the Detection Client and let it warm up for a few minutes
+
+
 ---
 
 THIS SECTION IS DEPRECATED!!!
